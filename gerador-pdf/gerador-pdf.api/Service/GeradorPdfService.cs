@@ -32,7 +32,6 @@ namespace gerador_pdf.api.Service
             memoryStream.Write(byteInfo, 0, byteInfo.Length);
             memoryStream.Position = 0;
 
-
             return new FileStreamResult(memoryStream, "application/pdf")
             {
                 FileDownloadName = "arquivo.pdf"
@@ -41,18 +40,59 @@ namespace gerador_pdf.api.Service
 
         public List<Pessoa> ObtendoArquivoJsonESerializandoEmUmObjeto()
         {
-            string filePath = @"C:\Github\pessoas.json";
+            string caminhoArquivo = @"C:\Github\pessoas.json";
 
-            FileIOPermission permissao = new FileIOPermission(FileIOPermissionAccess.Read, filePath);
+            var permissao = new FileIOPermission(FileIOPermissionAccess.Read, caminhoArquivo);
             permissao.Demand();
 
             // lendo conteúdo do arquivo json
-            string jsonString = File.ReadAllText(filePath);
+            string jsonString = File.ReadAllText(caminhoArquivo);
 
             // Deserialize o arquivo json para dentro de uma classe c#
-            List<Pessoa> pessoas = JsonConvert.DeserializeObject<List<Pessoa>>(jsonString);
-
+            var pessoas = JsonConvert.DeserializeObject<List<Pessoa>>(jsonString);
             return pessoas;
+        }
+
+        public void CriarCelulaTexto(PdfCelulaTextoModel celulaTexto)
+        {
+            celulaTexto.TamanhoFonte = 12;
+            celulaTexto.AlturaCelula = 25;
+
+            int estilo = Font.NORMAL;
+
+            if (celulaTexto.Negrito && celulaTexto.Italico)
+            {
+                estilo = Font.BOLDITALIC;
+            }
+            else if (celulaTexto.Negrito)
+            {
+                estilo = Font.BOLD;
+            }
+            else if (celulaTexto.Italico)
+            {
+                estilo = Font.ITALIC;
+            }
+
+            BaseFont fonteBase = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.CP1252, false);
+            Font fonte = new Font(fonteBase, celulaTexto.TamanhoFonte, estilo, BaseColor.Black);
+
+            //cor de fundo diferente para linhas pares e ímpares
+            var bgColor = BaseColor.White;
+           
+            if (celulaTexto.Tabela.Rows.Count % 2 == 1)
+            {
+                bgColor = new BaseColor(0.95f, 0.95f, 0.95f);
+            }
+
+            PdfPCell celula = new PdfPCell(new Phrase(celulaTexto.Texto, fonte));
+            celula.HorizontalAlignment = celulaTexto.Alinhamento;
+            celula.VerticalAlignment = PdfPCell.ALIGN_MIDDLE;
+            celula.Border = 0;
+            celula.BorderWidthBottom = 1;
+            celula.PaddingBottom = 5; //pra alinhar melhor verticalmente
+            celula.FixedHeight = celulaTexto.AlturaCelula;
+            celula.BackgroundColor = bgColor;
+            celulaTexto.Tabela.AddCell(celula);
         }
     }
 }

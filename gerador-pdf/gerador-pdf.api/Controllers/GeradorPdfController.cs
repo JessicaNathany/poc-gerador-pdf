@@ -1,14 +1,8 @@
 ﻿using gerador_pdf.api.Model;
-using gerador_pdf.api.Model.SGP;
 using gerador_pdf.api.Service;
-//using iTextSharp.text;
-//using iTextSharp.text.pdf;
-using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using System;
-using iTextSharp.LGPLv2.Core;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
+using Microsoft.AspNetCore.Mvc;
 
 namespace gerador_pdf.api.Controllers
 {
@@ -16,16 +10,16 @@ namespace gerador_pdf.api.Controllers
     [Route("[controller]")]
     public class GeradorPdfController : Controller
     {
-        private readonly IGeradorPdfServices _geradorPdfServices;
+        private readonly IGeradorPdfServices service;
 
         public GeradorPdfController(IGeradorPdfServices geradorPdfServices)
         {
-            _geradorPdfServices = geradorPdfServices;
+            service = geradorPdfServices;
         }
 
-        [HttpPost]
-        [Route("gerador-pdf")]
-        public async Task<ActionResult> GeraradorPDF([FromBody] PdfModel model)
+        [HttpGet]
+        [Route("pdf-roteiro-gravacao")]
+        public async Task<ActionResult> GeraradorPDF()
         {
             throw new NotImplementedException();
 
@@ -42,7 +36,7 @@ namespace gerador_pdf.api.Controllers
 
             //document.Close();
 
-            ////C:\Github\gerador-pdf\gerador-pdf
+
 
             //byte[] byteInfo = memoryStream.ToArray();
             //memoryStream.Write(byteInfo, 0, byteInfo.Length);
@@ -55,35 +49,166 @@ namespace gerador_pdf.api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> ExportarPdfPessoas()
+        [Route("pdf-pessoas")]
+        public async Task<ActionResult> GerarRelatorioPdfPessoas()
         {
-            var pessoas = _geradorPdfServices.ObtendoArquivoJsonESerializandoEmUmObjeto();
+            var pessoas = service.ObtendoArquivoJsonESerializandoEmUmObjeto();
             var memoryStream = new MemoryStream();
 
-            if(pessoas.Count == 0)
+            var producao = "relatorio-gravacao";
+
+            if (pessoas.Count == 0)
                 return NoContent();
 
+            int totalPaginas = 1;
+            if (pessoas.Count > 24)
+                totalPaginas += (int)Math.Ceiling((pessoas.Count - 24) / 29F);
+
             //configurar dados para criar PDF
-            var pixelsPorMilimetro = 72 / 25.2F;
+            var pixelsPorMilimetro = 90 / 40.2F;
             var pdf = new Document(PageSize.A4, 15 * pixelsPorMilimetro, 15 * pixelsPorMilimetro, 15 * pixelsPorMilimetro, 20 * pixelsPorMilimetro);
 
-            var nomeArquivo = $"pessoas.{DateTime.Now.ToString("yyyy.MM.dd.hh.mm.ss")}.pdf";
+            var nomeArquivo = $"pessoas.{producao}.pdf";
             var arquivo = new FileStream(nomeArquivo, FileMode.Create);
-            var pdfWriter = PdfWriter.GetInstance(pdf, arquivo);
-            
+            var pdfWriter = PdfWriter.GetInstance(pdf, arquivo).CloseStream = false;
             pdf.Open();
 
             var fonteBase = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.CP1252, false);
-            var fonteParagrafo = new Font(fonteBase, 32, Font.NORMAL, BaseColor.Black);
-            var titulo = new Paragraph("Relatório de Pessoas\n\n", fonteParagrafo);
-            titulo.Alignment = Element.ALIGN_LEFT;
-            pdf.Add(titulo);
+            
+            //adiciona título
+            var fonteHeader = new Font(fonteBase, 10, Font.BOLD, BaseColor.Black);
+            var fonteHeaderData = new Font(fonteBase, 8, Font.NORMAL, BaseColor.Black);
+            var headerTitulo1 = "SISTEMAS DE GESTÃO DE PROGRAMAS";
+            var dataHeader = DateTime.Now.ToString();
 
+            Paragraph header = new Paragraph($"{headerTitulo1}\n\n", fonteHeader);
+            Paragraph headerData = new Paragraph($"{dataHeader}\n\n", fonteHeaderData);
+            header.Alignment = Element.ALIGN_RIGHT;
+            headerData.Alignment = Element.ALIGN_LEFT;
+            pdf.Add(header);
+            pdf.Add(headerData);
+
+
+            //adiciona uma tabela
+            var tabela = new PdfPTable(5);
+            float[] larguras = { 0.6f, 2f, 1.5f, 1f, 1f };
+            tabela.SetWidths(larguras);
+            tabela.DefaultCell.BorderWidth = 0;
+            tabela.WidthPercentage = 100;
+
+            //adiciona os títulos das colunas
+            CriarCelulasTexto(tabela);
+
+            PercorreListaPessoasAssociaValorNasTabela(pessoas, tabela);
+
+            pdf.Add(tabela);
+            pdf.Close();
+            arquivo.Close();
 
             return new FileStreamResult(memoryStream, "application/pdf")
             {
-                FileDownloadName = $"realtorio.pdf"
+                FileDownloadName = nomeArquivo
             };
+        }
+        private void CriarCelulasTexto(PdfPTable tabela)
+        {
+            service.CriarCelulaTexto(new PdfCelulaTextoModel
+            {
+                Tabela = tabela,
+                Texto = "Código",
+                Alinhamento = PdfPCell.ALIGN_LEFT,
+                Negrito = true,
+                Italico = false,
+                TamanhoFonte = 12,
+                AlturaCelula = 25
+            });
+
+            service.CriarCelulaTexto(new PdfCelulaTextoModel
+            {
+                Tabela = tabela,
+                Texto = "Nome",
+                Alinhamento = PdfPCell.ALIGN_LEFT,
+                Negrito = true,
+                Italico = false,
+                TamanhoFonte = 12,
+                AlturaCelula = 25
+            });
+
+            service.CriarCelulaTexto(new PdfCelulaTextoModel
+            {
+                Tabela = tabela,
+                Texto = "Profissão",
+                Alinhamento = PdfPCell.ALIGN_LEFT,
+                Negrito = true,
+                Italico = false,
+                TamanhoFonte = 12,
+                AlturaCelula = 25
+            });
+
+
+            service.CriarCelulaTexto(new PdfCelulaTextoModel
+            {
+                Tabela = tabela,
+                Texto = "Salário",
+                Alinhamento = PdfPCell.ALIGN_LEFT,
+                Negrito = true,
+                Italico = false,
+                TamanhoFonte = 12,
+                AlturaCelula = 25
+            });
+
+            service.CriarCelulaTexto(new PdfCelulaTextoModel
+            {
+                Tabela = tabela,
+                Texto = "Empregada",
+                Alinhamento = PdfPCell.ALIGN_LEFT,
+                Negrito = true,
+                Italico = false,
+                TamanhoFonte = 12,
+                AlturaCelula = 25
+            });
+        }
+
+        private void PercorreListaPessoasAssociaValorNasTabela(List<Pessoa> pessoas, PdfPTable tabela)
+        {
+            foreach (var pessoa in pessoas)
+            {
+                service.CriarCelulaTexto(new PdfCelulaTextoModel
+                {
+                    Tabela = tabela,
+                    Texto = pessoa.IdPessoa.ToString("D6"),
+                    Alinhamento = PdfPCell.ALIGN_LEFT,
+                    Negrito = false,
+                    Italico = false
+                });
+
+                service.CriarCelulaTexto(new PdfCelulaTextoModel
+                {
+                    Tabela = tabela,
+                    Texto = pessoa.Nome + " " + pessoa.Sobrenome,
+                    Alinhamento = PdfPCell.ALIGN_LEFT,
+                    Negrito = false,
+                    Italico = false
+                });
+
+                service.CriarCelulaTexto(new PdfCelulaTextoModel
+                {
+                    Tabela = tabela,
+                    Texto = pessoa.Profissao.Nome,
+                    Alinhamento = PdfPCell.ALIGN_LEFT,
+                    Negrito = false,
+                    Italico = false
+                });
+
+                service.CriarCelulaTexto(new PdfCelulaTextoModel
+                {
+                    Tabela = tabela,
+                    Texto = pessoa.Salario.ToString("C2"),
+                    Alinhamento = PdfPCell.ALIGN_LEFT,
+                    Negrito = false,
+                    Italico = false
+                });
+            }
         }
     }
 }

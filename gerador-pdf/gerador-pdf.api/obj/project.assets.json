@@ -4527,11 +4527,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Github\\gerador-pdf\\gerador-pdf\\gerador-pdf.api\\gerador-pdf.api.csproj",
+      "projectUniqueName": "C:\\Github\\poc-gerador-pdf\\gerador-pdf\\gerador-pdf.api\\gerador-pdf.api.csproj",
       "projectName": "gerador-pdf.api",
-      "projectPath": "C:\\Github\\gerador-pdf\\gerador-pdf\\gerador-pdf.api\\gerador-pdf.api.csproj",
+      "projectPath": "C:\\Github\\poc-gerador-pdf\\gerador-pdf\\gerador-pdf.api\\gerador-pdf.api.csproj",
       "packagesPath": "C:\\Users\\jnathany\\.nuget\\packages\\",
-      "outputPath": "C:\\Github\\gerador-pdf\\gerador-pdf\\gerador-pdf.api\\obj\\",
+      "outputPath": "C:\\Github\\poc-gerador-pdf\\gerador-pdf\\gerador-pdf.api\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
