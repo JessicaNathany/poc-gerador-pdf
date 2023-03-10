@@ -21,31 +21,65 @@ namespace gerador_pdf.api.Controllers
         [Route("pdf-roteiro-gravacao")]
         public async Task<ActionResult> GeraradorPDF()
         {
-            throw new NotImplementedException();
+            var pessoas = service.ObtendoArquivoJsonESerializandoEmUmObjeto();
+            var memoryStream = new MemoryStream();
 
-            //MemoryStream memoryStream = new MemoryStream();
+            var producao = "relatorio-gravacao";
 
-            //Document document = new Document(PageSize.A4, 36, 36, 36, 36);
+            if (pessoas.Count == 0)
+                return NoContent();
 
-            //PdfWriter.GetInstance(document, memoryStream).CloseStream = false;
+            int totalPaginas = 1;
+            if (pessoas.Count > 24)
+                totalPaginas += (int)Math.Ceiling((pessoas.Count - 24) / 29F);
 
-            //document.Open();
-            //document.Add(new Paragraph(model.Texto));
+            //configurar dados para criar PDF
+            var pixelsPorMilimetro = 90 / 40.2F;
+            var pdf = new Document(PageSize.A4, 15 * pixelsPorMilimetro, 15 * pixelsPorMilimetro, 15 * pixelsPorMilimetro, 20 * pixelsPorMilimetro);
 
-            //Font fonte = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.Black);
+            var nomeArquivo = $"pessoas.{producao}.pdf";
+            var arquivo = new FileStream(nomeArquivo, FileMode.Create);
+            var pdfWriter = PdfWriter.GetInstance(pdf, arquivo).CloseStream = false;
+            pdf.Open();
 
-            //document.Close();
+            var fonteBase = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.CP1252, false);
+
+            //adiciona título
+            var fonteHeader = new Font(fonteBase, 10, Font.BOLD, BaseColor.Black);
+            var fonteHeaderData = new Font(fonteBase, 8, Font.NORMAL, BaseColor.Black);
+            var headerTitulo1 = "SISTEMAS DE GESTÃO DE PROGRAMAS";
+            var dataHeader = DateTime.Now.ToString();
+
+            Paragraph header = new Paragraph($"{headerTitulo1}\n\n", fonteHeader);
+            Paragraph headerData = new Paragraph($"{dataHeader}\n\n", fonteHeaderData);
+            header.Alignment = Element.ALIGN_RIGHT;
+            headerData.Alignment = Element.ALIGN_LEFT;
+            pdf.Add(header);
+            pdf.Add(headerData);
 
 
+            //adiciona uma tabela
+            var tabela = new PdfPTable(5);
+            float[] larguras = { 0.6f, 2f, 1.5f, 1f, 1f };
+            tabela.SetWidths(larguras);
+            tabela.DefaultCell.BorderWidth = 0;
+            tabela.WidthPercentage = 100;
 
-            //byte[] byteInfo = memoryStream.ToArray();
-            //memoryStream.Write(byteInfo, 0, byteInfo.Length);
-            //memoryStream.Position = 0;
+            //adiciona os títulos das colunas
+            CriarCelulasTexto(tabela);
 
-            //return new FileStreamResult(memoryStream, "application/pdf")
-            //{
-            //    FileDownloadName = $"{model.Roteiro}.pdf"
-            //};
+            PercorreListaPessoasAssociaValorNasTabela(pessoas, tabela);
+
+            pdf.Add(tabela);
+            pdf.Close();
+            arquivo.Close();
+
+            return new FileStreamResult(memoryStream, "application/pdf")
+            {
+                FileDownloadName = nomeArquivo
+            };
+
+
         }
 
         [HttpGet]
@@ -110,6 +144,8 @@ namespace gerador_pdf.api.Controllers
                 FileDownloadName = nomeArquivo
             };
         }
+
+
         private void CriarCelulasTexto(PdfPTable tabela)
         {
             service.CriarCelulaTexto(new PdfCelulaTextoModel

@@ -12,32 +12,6 @@ namespace gerador_pdf.api.Service
 
     public class GeradorPdfService : IGeradorPdfServices
     {
-        public async Task<FileStreamResult> GearPdf(PdfModel model)
-        {
-            MemoryStream memoryStream = new MemoryStream();
-
-            Document document = new Document(PageSize.A4, 36, 36, 36, 36);
-
-            //PdfWriter.GetInstance(document, memoryStream).CloseStream = false;
-            PdfWriter writer = PdfWriter.GetInstance(document, new FileStream("output.pdf", FileMode.Create));
-
-            document.Open();
-            document.Add(new Paragraph(model.Texto));
-            Font fonte = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.Black);
-
-
-            document.Close();
-
-            byte[] byteInfo = memoryStream.ToArray();
-            memoryStream.Write(byteInfo, 0, byteInfo.Length);
-            memoryStream.Position = 0;
-
-            return new FileStreamResult(memoryStream, "application/pdf")
-            {
-                FileDownloadName = "arquivo.pdf"
-            };
-        }
-
         public List<Pessoa> ObtendoArquivoJsonESerializandoEmUmObjeto()
         {
             string caminhoArquivo = @"C:\Github\pessoas.json";
