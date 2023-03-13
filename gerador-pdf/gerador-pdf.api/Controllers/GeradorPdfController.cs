@@ -4,7 +4,6 @@ using iTextSharp.text;
 using iTextSharp.text.pdf;
 using iTextSharp.text.pdf.draw;
 using Microsoft.AspNetCore.Mvc;
-using System.Reflection.Metadata;
 using Document = iTextSharp.text.Document;
 
 namespace gerador_pdf.api.Controllers

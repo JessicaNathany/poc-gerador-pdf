@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "PDxdOEujLeqrhKJdHuv+MjMFUsx/dNyjgzNy/v5zms4=",
+  "Source": "gerador-pdf.api",
+  "BasePath": "_content/gerador-pdf.api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
