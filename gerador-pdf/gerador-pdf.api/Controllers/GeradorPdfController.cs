@@ -2,7 +2,10 @@
 using gerador_pdf.api.Service;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
+using iTextSharp.text.pdf.draw;
 using Microsoft.AspNetCore.Mvc;
+using System.Reflection.Metadata;
+using Document = iTextSharp.text.Document;
 
 namespace gerador_pdf.api.Controllers
 {
@@ -50,12 +53,15 @@ namespace gerador_pdf.api.Controllers
             var headerTitulo1 = "SISTEMAS DE GESTÃO DE PROGRAMAS";
             var dataHeader = DateTime.Now.ToString();
 
+           
             Paragraph header = new Paragraph($"{headerTitulo1}\n\n", fonteHeader);
             Paragraph headerData = new Paragraph($"{dataHeader}\n\n", fonteHeaderData);
             header.Alignment = Element.ALIGN_RIGHT;
             headerData.Alignment = Element.ALIGN_LEFT;
             pdf.Add(header);
             pdf.Add(headerData);
+
+     
 
 
             //adiciona uma tabela
@@ -115,6 +121,7 @@ namespace gerador_pdf.api.Controllers
             var headerTitulo1 = "SISTEMAS DE GESTÃO DE PROGRAMAS";
             var dataHeader = DateTime.Now.ToString();
 
+
             Paragraph header = new Paragraph($"{headerTitulo1}\n\n", fonteHeader);
             Paragraph headerData = new Paragraph($"{dataHeader}\n\n", fonteHeaderData);
             header.Alignment = Element.ALIGN_RIGHT;
@@ -122,13 +129,20 @@ namespace gerador_pdf.api.Controllers
             pdf.Add(header);
             pdf.Add(headerData);
 
-
             //adiciona uma tabela
             var tabela = new PdfPTable(5);
             float[] larguras = { 0.6f, 2f, 1.5f, 1f, 1f };
             tabela.SetWidths(larguras);
             tabela.DefaultCell.BorderWidth = 0;
             tabela.WidthPercentage = 100;
+
+
+            LineSeparator line = new LineSeparator(5f, 100f, BaseColor.Black, Element.ALIGN_CENTER, -1);
+            pdf.Add(line);
+
+            // adicionando parágrafo vazio para quebra de linha
+            pdf.Add(new Paragraph(""));
+            pdf.Add(new Paragraph(""));
 
             //adiciona os títulos das colunas
             CriarCelulasTexto(tabela);
